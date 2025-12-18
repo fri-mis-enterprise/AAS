@@ -44,5 +44,13 @@ namespace Accounting_System.Models
         public string? OriginalSeriesNumber { get; set; }
 
         public int OriginalDocumentId { get; set; }
+
+        [Display(Name = "Edited By")]
+        [Column(TypeName = "varchar(50)")]
+        public string EditedBy { get; set; } = string.Empty;
+
+        [Display(Name = "Edited Date")]
+        [Column(TypeName = "timestamp without time zone")]
+        public DateTime? EditedDate { get; set; }
     }
 }
