@@ -340,7 +340,7 @@ namespace Accounting_System.Controllers
         [HttpGet]
         public async Task<IActionResult> Print(int? id, CancellationToken cancellationToken)
         {
-            if (id == null || !_dbContext.ReceivingReports.Any())
+            if (id == null)
             {
                 return NotFound();
             }
