@@ -382,7 +382,8 @@ namespace Accounting_System.Controllers
             if (modelHeader != null)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-                var createdBy = await _generalRepo.GetUserFullNameAsync(User.Identity!.Name!);
+                var createdBy = !modelHeader.OriginalSeriesNumber.IsNullOrEmpty() && modelHeader.OriginalDocumentId != 0 ? modelHeader.PostedBy : await _generalRepo.GetUserFullNameAsync(User.Identity!.Name!);
+                var date = !modelHeader.OriginalSeriesNumber.IsNullOrEmpty() && modelHeader.OriginalDocumentId != 0 ? modelHeader.PostedDate : DateTime.Now;
                 try
                 {
                     var modelDetails = await _dbContext.JournalVoucherDetails.Where(jvd => jvd.TransactionNo == modelHeader.JournalVoucherHeaderNo).ToListAsync(cancellationToken);
@@ -390,7 +391,7 @@ namespace Accounting_System.Controllers
                     {
                         modelHeader.IsPosted = true;
                         modelHeader.PostedBy = createdBy;
-                        modelHeader.PostedDate = DateTime.Now;
+                        modelHeader.PostedDate = date;
 
                         #region --General Ledger Book Recording(GL)--
 
@@ -482,7 +483,8 @@ namespace Accounting_System.Controllers
             var findJournalVoucherInJournalBook = await _dbContext.JournalBooks.Where(jb => jb.Reference == model!.JournalVoucherHeaderNo).ToListAsync(cancellationToken);
             var findJournalVoucherInGeneralLedger = await _dbContext.GeneralLedgerBooks.Where(jb => jb.Reference == model!.JournalVoucherHeaderNo).ToListAsync(cancellationToken);
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-            var createdBy = await _generalRepo.GetUserFullNameAsync(User.Identity!.Name!);
+            var createdBy = !model.OriginalSeriesNumber.IsNullOrEmpty() && model.OriginalDocumentId != 0 ? model.VoidedBy : await _generalRepo.GetUserFullNameAsync(User.Identity!.Name!);
+            var date = !model.OriginalSeriesNumber.IsNullOrEmpty() && model.OriginalDocumentId != 0 ? model.VoidedDate : DateTime.Now;
             try
             {
                 if (model != null)
@@ -496,7 +498,7 @@ namespace Accounting_System.Controllers
 
                         model.IsVoided = true;
                         model.VoidedBy = createdBy;
-                        model.VoidedDate = DateTime.Now;
+                        model.VoidedDate = date;
 
                         if (findJournalVoucherInJournalBook.Any())
                         {
@@ -539,7 +541,8 @@ namespace Accounting_System.Controllers
         {
             var model = await _dbContext.JournalVoucherHeaders.FirstOrDefaultAsync(x => x.JournalVoucherHeaderId == id, cancellationToken);
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-            var createdBy = await _generalRepo.GetUserFullNameAsync(User.Identity!.Name!);
+            var createdBy = !model.OriginalSeriesNumber.IsNullOrEmpty() && model.OriginalDocumentId != 0 ? model.CanceledBy : await _generalRepo.GetUserFullNameAsync(User.Identity!.Name!);
+            var date = !model.OriginalSeriesNumber.IsNullOrEmpty() && model.OriginalDocumentId != 0 ? model.CanceledDate : DateTime.Now;
             try
             {
                 if (model != null)
@@ -548,7 +551,7 @@ namespace Accounting_System.Controllers
                     {
                         model.IsCanceled = true;
                         model.CanceledBy = createdBy;
-                        model.CanceledDate = DateTime.Now;
+                        model.CanceledDate = date;
                         model.CancellationRemarks = cancellationRemarks;
 
                         #region --Audit Trail Recording

@@ -336,14 +336,15 @@ namespace Accounting_System.Controllers
             var model = await _debitMemoRepo.FindDM(id, cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-            var createdBy = await _generalRepo.GetUserFullNameAsync(User.Identity!.Name!);
+            var createdBy = !model.OriginalSeriesNumber.IsNullOrEmpty() && model.OriginalDocumentId != 0 ? model.PostedBy : await _generalRepo.GetUserFullNameAsync(User.Identity!.Name!);
+            var date = !model.OriginalSeriesNumber.IsNullOrEmpty() && model.OriginalDocumentId != 0 ? model.PostedDate : DateTime.Now;
             try
             {
                 if (!model.IsPosted)
                 {
                     model.IsPosted = true;
                     model.PostedBy = createdBy;
-                    model.PostedDate = DateTime.Now;
+                    model.PostedDate = date;
 
                     var accountTitlesDto = await _generalRepo.GetListOfAccountTitleDto(cancellationToken);
                     var arTradeReceivableTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020100") ?? throw new ArgumentException("Account number: '101020100', Account title: 'AR-Trade Receivable' not found.");
@@ -766,7 +767,8 @@ namespace Accounting_System.Controllers
             if (model != null)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-                var createdBy = await _generalRepo.GetUserFullNameAsync(User.Identity!.Name!);
+                var createdBy = !model.OriginalSeriesNumber.IsNullOrEmpty() && model.OriginalDocumentId != 0 ? model.VoidedBy : await _generalRepo.GetUserFullNameAsync(User.Identity!.Name!);
+                var date = !model.OriginalSeriesNumber.IsNullOrEmpty() && model.OriginalDocumentId != 0 ? model.VoidedDate : DateTime.Now;
                 try
                 {
                     if (!model.IsVoided)
@@ -778,7 +780,7 @@ namespace Accounting_System.Controllers
 
                         model.IsVoided = true;
                         model.VoidedBy = createdBy;
-                        model.VoidedDate = DateTime.Now;
+                        model.VoidedDate = date;
 
                         await _generalRepo.RemoveRecords<SalesBook>(crb => crb.SerialNo == model.DebitMemoNo, cancellationToken);
                         await _generalRepo.RemoveRecords<GeneralLedgerBook>(gl => gl.Reference == model.DebitMemoNo, cancellationToken);
@@ -815,7 +817,8 @@ namespace Accounting_System.Controllers
         {
             var model = await _dbContext.DebitMemos.FirstOrDefaultAsync(x => x.DebitMemoId == id, cancellationToken);
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-            var createdBy = await _generalRepo.GetUserFullNameAsync(User.Identity!.Name!);
+            var createdBy = !model.OriginalSeriesNumber.IsNullOrEmpty() && model.OriginalDocumentId != 0 ? model.CanceledBy : await _generalRepo.GetUserFullNameAsync(User.Identity!.Name!);
+            var date = !model.OriginalSeriesNumber.IsNullOrEmpty() && model.OriginalDocumentId != 0 ? model.CanceledDate : DateTime.Now;
             try
             {
                 if (model != null)
@@ -824,7 +827,7 @@ namespace Accounting_System.Controllers
                     {
                         model.IsCanceled = true;
                         model.CanceledBy = createdBy;
-                        model.CanceledDate = DateTime.Now;
+                        model.CanceledDate = date;
                         model.CancellationRemarks = cancellationRemarks;
 
                         #region --Audit Trail Recording

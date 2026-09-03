@@ -898,13 +898,14 @@ namespace Accounting_System.Controllers
             if (modelHeader != null)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-                var createdBy = await _generalRepo.GetUserFullNameAsync(User.Identity!.Name!);
+                var createdBy = !modelHeader.OriginalSeriesNumber.IsNullOrEmpty() && modelHeader.OriginalDocumentId != 0 ? modelHeader.PostedBy : await _generalRepo.GetUserFullNameAsync(User.Identity!.Name!);
+                var date = !modelHeader.OriginalSeriesNumber.IsNullOrEmpty() && modelHeader.OriginalDocumentId != 0 ? modelHeader.PostedDate : DateTime.Now;
                 try
                 {
                     if (!modelHeader.IsPosted)
                     {
                         modelHeader.PostedBy = createdBy;
-                        modelHeader.PostedDate = DateTime.Now;
+                        modelHeader.PostedDate = date;
                         modelHeader.IsPosted = true;
                         //modelHeader.Status = nameof(Status.Posted);
 
@@ -1027,7 +1028,8 @@ namespace Accounting_System.Controllers
             var model = await _dbContext.CheckVoucherHeaders.FirstOrDefaultAsync(x => x.CheckVoucherHeaderId == id, cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-            var createdBy = await _generalRepo.GetUserFullNameAsync(User.Identity!.Name!);
+            var createdBy = !model.OriginalSeriesNumber.IsNullOrEmpty() && model.OriginalDocumentId != 0 ? model.CanceledBy : await _generalRepo.GetUserFullNameAsync(User.Identity!.Name!);
+            var date = !model.OriginalSeriesNumber.IsNullOrEmpty() && model.OriginalDocumentId != 0 ? model.CanceledDate : DateTime.Now;
             try
             {
                 if (model != null)
@@ -1035,7 +1037,7 @@ namespace Accounting_System.Controllers
                     if (!model.IsCanceled)
                     {
                         model.CanceledBy = createdBy;
-                        model.CanceledDate = DateTime.Now;
+                        model.CanceledDate = date;
                         model.IsCanceled = true;
                         //model.Status = nameof(Status.Canceled);
                         model.CancellationRemarks = cancellationRemarks;
@@ -1100,7 +1102,8 @@ namespace Accounting_System.Controllers
             if (model != null)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-                var createdBy = await _generalRepo.GetUserFullNameAsync(User.Identity!.Name!);
+                var createdBy = !model.OriginalSeriesNumber.IsNullOrEmpty() && model.OriginalDocumentId != 0 ? model.VoidedBy : await _generalRepo.GetUserFullNameAsync(User.Identity!.Name!);
+                var date = !model.OriginalSeriesNumber.IsNullOrEmpty() && model.OriginalDocumentId != 0 ? model.VoidedDate : DateTime.Now;
                 try
                 {
                     if (!model.IsVoided)
@@ -1111,7 +1114,7 @@ namespace Accounting_System.Controllers
                         }
 
                         model.VoidedBy = createdBy;
-                        model.VoidedDate = DateTime.Now;
+                        model.VoidedDate = date;
                         model.IsVoided = true;
                         //model.Status = nameof(Status.Voided);
 
